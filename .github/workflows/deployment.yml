@@ -34,7 +34,7 @@ jobs:
         fi
 
     - name: Create S3 bucket if not exists
-      if: steps.check_bucket.outputs.exists == 'false'
+      if: env.BUCKET_EXISTS == 'false'
       run: |
         aws s3api create-bucket --bucket "terraform-backend-sdfsdewfdsfds" --region ap-southeast-2 --create-bucket-configuration LocationConstraint=ap-southeast-2
     
