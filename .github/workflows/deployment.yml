@@ -1,0 +1,47 @@
+name: Terraform deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout respository
+      uses: actions/checkout@4
+
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-southeast-2
+    
+    - name: Check if S3 bucket exists
+      id: check_bucket
+      run: |
+        if aws s3api head-bucket --bucket "terraform-backend-LSDKJfljdfs8e" 2>/dev/null; then
+          echo "Bucket exists."
+          echo "::set-output name=exists::true"
+        else
+          echo "Bucket does not exist."
+          echo "::set-output name=exists::false"
+        fi
+
+    - name: Create S3 bucket if not exists
+      if: steps.check_bucket.outputs.exists == 'false'
+      run: |
+        aws s3api create-bucket --bucket "terraform-backend-LSDKJfljdfs8e" --region ap-southeast-2 --create-bucket-configuration LocationConstraint=ap-southeast-2
+    
+#    - name: Setup Terraform
+#      uses: hashicorp/setup-terraform@v3
+#
+#    - name: Terraform Init
+#      run: cd terraform && terraform init
